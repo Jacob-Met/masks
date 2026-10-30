@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Masks</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="top">
+  <h1>Masks <span class="sub">Short Count</span></h1>
+  <div class="tools">
+    <span id="model" class="pill" title="Dialogue model"></span>
+    <button id="restart" class="quiet" type="button">Start over</button>
+  </div>
+</header>
+<main>
+  <section class="story" aria-label="Story">
+    <ol id="events" class="events"></ol>
+    <div id="beat" class="beat" aria-live="polite"></div>
+  </section>
+  <section class="minds" aria-label="What each character knows">
+    <div class="legend" aria-hidden="true">
+      <span><i class="k saw"></i>saw / did</span><span><i class="k told"></i>told</span><span><i class="k ded"></i>worked out</span><span><i class="k wrong"></i>wrong</span>
+    </div>
+    <div class="matrix" id="matrix" role="table" aria-label="Belief matrix"></div>
+    <div class="voice" id="voice">
+      <form id="askForm">
+        <label for="q" id="askLabel">Ask</label>
+        <input id="q" name="q" autocomplete="off" maxlength="300" placeholder="What happened here this morning?">
+        <button id="ask" type="submit">Ask</button>
+      </form>
+      <div class="chips" id="chips"></div>
+      <div id="reply" class="reply" aria-live="polite"></div>
+    </div>
+  </section>
+</main>
+<script src="/app.js" type="module"></script>
+</body>
+</html>

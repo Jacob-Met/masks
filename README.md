@@ -16,6 +16,36 @@ node --test                 # 19 tests, no network needed
 
 Without a key the app still runs and uses scripted lines, labelled as such in the UI.
 
+## Play the mystery before inspecting the mechanism
+
+**Witness view** is the default. The opening shows only what Mara could
+observe through the ferry-office window. Each choice adds a case-file card
+marked **Observed**, **Claimed**, **Reported**, **Counted**, or **Unresolved**
+instead of pretending that suspicion and verification are the same thing.
+The full underlying world-truth matrix and Joss's unobserved opening actions
+are deliberately withheld during play. You can still question any character.
+
+**Reveal all minds · spoilers** switches explicitly to the original director's
+belief matrix, all opening events, and inspectable model prompts and rejected
+attempts. You can return to witness view. Changing lenses clears the displayed
+reply so a previously exposed prompt does not remain on screen. **Start over**
+returns to the default unspoiled case.
+
+The playable HTTP game response omits omniscient matrix data and private opening
+events by default. The reply API omits private model prompts and rejected text
+by default; an explicit director request includes them. These are
+**presentation/spoiler boundaries, not access control**: someone inspecting the
+local application may deliberately select the director view, and the dialogue
+guard remains a bounded regex heuristic rather than a privacy guarantee.
+The offline scripted dialogue path needs no credential or external service.
+
+### Reproducible offline review package
+
+Run python3 scripts/package.py to create a ZIP, checksum sidecar and internal
+file-hash manifest in dist/. Extract the ZIP, enter its masks/ directory, run
+node --test, then node server.mjs. The package contains the source application,
+tests and README, but no keys or network dependencies.
+
 ## How it uses NVIDIA Nemotron on Nebius Token Factory
 
 - Model: `nvidia/nemotron-3-super-120b-a12b` (override with `MASKS_MODEL`), called server-side at `https://api.tokenfactory.nebius.com/v1/chat/completions`. The browser never sees the key.

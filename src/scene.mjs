@@ -114,6 +114,37 @@ export function verdict(s) {
   return { key: "quiet", title: "Everyone carries a private morning", text: "Nothing is said and nothing changes. Mara saw something, Joss did something, and neither knows what the other holds.", events: [] };
 }
 
-export const scene = { id: "short-count", title: "Short Count", characters, props, backstory, opening, beats, derive, verdict,
+// The playable investigation begins with Mara's view through the window.
+ // Only the director's lens may reveal Joss's unobserved opening actions.
+export const directorOnlyEventIds = ["e1", "e3"];
+
+// Authored notes distinguish testimony from what a witness directly checked.
+// They are keyed by playable events, never derived from omniscient world truth.
+export const caseNotes = {
+  e2: { kind: "Observed", source: "Mara · through the window",
+        text: "Joss was at the open box with its key. A post hid his other hand; Mara did not see what went into or out of the box." },
+  c1: { kind: "Claimed", source: "Joss · at the gangway",
+        text: "Joss says he was putting money back. No one has checked the count." },
+  c2: { kind: "Unresolved", source: "Mara · the yard",
+        text: "Mara keeps her suspicion private. Venn has not heard her account." },
+  c3: { kind: "Reported", source: "Mara → Inspector Venn",
+        text: "Mara describes an open box and the key in Joss's hand. Her suspicion of theft is an inference, not an observed missing count." },
+  v1: { kind: "Counted", source: "Inspector Venn · cash box",
+        text: "Venn counts every coin and finds the box full. The count does not establish what happened before she arrived." },
+  v2a: { kind: "Claimed", source: "Joss → Inspector Venn",
+        text: "Joss says he returned money. The box has not yet been counted." },
+  v2b: { kind: "Claimed", source: "Joss → Inspector Venn",
+        text: "Joss volunteers that he opened the box and put money back. Venn has not verified the count." },
+  v2c: { kind: "Claimed", source: "Joss → Inspector Venn",
+        text: "Joss says he has nothing to report. This is not a count or an independent observation." },
+  v3a: { kind: "Reported", source: "Mara → Inspector Venn",
+        text: "Mara repeats the account she already gave; the retelling adds no direct observation." },
+  v3b: { kind: "Reported", source: "Mara → Inspector Venn",
+        text: "Mara describes the key and the open box, then voices suspicion. She could not see Joss's obscured hand." },
+  v4: { kind: "Unresolved", source: "Inspector Venn · ledgers",
+        text: "Venn reads paperwork without asking the witnesses or checking the cash count." },
+};
+
+export const scene = { id: "short-count", title: "Short Count", characters, props, backstory, opening, beats, derive, verdict, directorOnlyEventIds, caseNotes,
   setting: "Pell's Landing, a small river ferry office at dawn. There is a locked cash box, a key on a hook by the door, and one window facing the yard." };
 export default scene;

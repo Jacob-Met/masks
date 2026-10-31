@@ -4,20 +4,21 @@ import { fileURLToPath } from "node:url";
 import { dirname, join, extname } from "node:path";
 import { scene } from "./src/scene.mjs";
 import { replay, snapshot } from "./src/engine.mjs";
+import { presentCase, presentReply } from "./src/perspective.mjs";
 import { speak, MODEL } from "./src/voice.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 4415);
 const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml" };
 
-function game(pathStr) {
+function game(pathStr, view) {
   const ids = pathStr ? pathStr.split(",").filter(Boolean) : [];
   const { state, beatIndex, ending } = replay(scene, ids);
   const beat = scene.beats[beatIndex];
   return {
     title: scene.title, setting: scene.setting,
     characters: scene.characters.map(({ id, name, role, color }) => ({ id, name, role, color })),
-    ...snapshot(scene, state), path: ids,
+    ...presentCase(scene, snapshot(scene, state), view), path: ids,
     beat: beat ? { id: beat.id, prompt: beat.prompt, options: beat.options.map((o) => ({ id: o.id, label: o.label, hint: o.hint })) } : null,
     ending: ending ? { key: ending.key, title: ending.title, text: ending.text } : null,
     model: MODEL, live: Boolean(process.env.NEBIUS_API_KEY),
@@ -30,14 +31,14 @@ export function createServer() {
   return http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url, "http://x");
-      if (url.pathname === "/api/game") return json(res, 200, game(url.searchParams.get("path") || ""));
+      if (url.pathname === "/api/game") return json(res, 200, game(url.searchParams.get("path") || "", url.searchParams.get("view")));
       if (url.pathname === "/api/say" && req.method === "POST") {
         let body = ""; for await (const c of req) { body += c; if (body.length > 4000) break; }
-        const { path = "", who, question = "" } = JSON.parse(body || "{}");
+        const { path = "", who, question = "", view = "story" } = JSON.parse(body || "{}");
         if (!scene.characters.some((c) => c.id === who)) return json(res, 400, { error: "unknown character" });
         const q = String(question).slice(0, 300) || "What happened here this morning?";
         const { state } = replay(scene, path ? path.split(",").filter(Boolean) : []);
-        return json(res, 200, await speak(scene, state, who, q));
+        return json(res, 200, presentReply(await speak(scene, state, who, q), view));
       }
       let f = url.pathname === "/" ? "/index.html" : url.pathname;
       if (f.includes("..")) return json(res, 400, { error: "bad path" });

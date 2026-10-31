@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join, extname } from "node:path";
 import { scene } from "./src/scene.mjs";
 import { replay, snapshot } from "./src/engine.mjs";
-import { presentCase, presentReply } from "./src/perspective.mjs";
+import { presentCase, presentReply, presentEnding } from "./src/perspective.mjs";
 import { speak, MODEL } from "./src/voice.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -20,7 +20,7 @@ function game(pathStr, view) {
     characters: scene.characters.map(({ id, name, role, color }) => ({ id, name, role, color })),
     ...presentCase(scene, snapshot(scene, state), view), path: ids,
     beat: beat ? { id: beat.id, prompt: beat.prompt, options: beat.options.map((o) => ({ id: o.id, label: o.label, hint: o.hint })) } : null,
-    ending: ending ? { key: ending.key, title: ending.title, text: ending.text } : null,
+    ending: presentEnding(scene, ending, view),
     model: MODEL, live: Boolean(process.env.NEBIUS_API_KEY),
   };
 }

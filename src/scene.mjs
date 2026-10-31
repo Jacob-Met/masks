@@ -143,8 +143,29 @@ export const caseNotes = {
         text: "Mara describes the key and the open box, then voices suspicion. She could not see Joss's obscured hand." },
   v4: { kind: "Unresolved", source: "Inspector Venn · ledgers",
         text: "Venn reads paperwork without asking the witnesses or checking the cash count." },
+  x2: { kind: "Unresolved", source: "Inspector Venn · pending inquiry",
+        text: "Joss is held on Mara's report. Venn has not counted the sealed box, so the alleged shortage is not established." },
+  x3: { kind: "Counted", source: "Inspector Venn · after questioning",
+        text: "After hearing conflicting accounts, Venn checks the cash and finds its full count. The inspection cannot establish what happened earlier." },
 };
 
-export const scene = { id: "short-count", title: "Short Count", characters, props, backstory, opening, beats, derive, verdict, directorOnlyEventIds, caseNotes,
+// Authored witness conclusions must never inherit omniscient ending narration.
+// Even a finished case can establish a count without proving a hidden motive.
+export const witnessEndings = {
+  cleared: { title: "The box checks out",
+    text: "Venn checks the cash and finds the full count. She tells Mara and Joss there is no shortage to pursue. Mara saw the open box, but the count cannot tell her what happened before she looked in." },
+  routine: { title: "An ordinary inspection",
+    text: "The inspection finds the box intact. Mara never tells Venn what she saw through the window, so her question remains between her and the morning." },
+  hold: { title: "An inquiry without a count",
+    text: "Venn acts on Mara's account and detains Joss pending inquiry, sealing the box without opening it. A witness has spoken; the money has not been checked. The question remains unresolved." },
+  count_late: { title: "Doubt leads to evidence",
+    text: "After hearing competing accounts, Venn checks the cash instead of treating suspicion as proof. The count is full. What happened before the inspection remains outside the count itself." },
+  fester: { title: "The silence stays",
+    text: "Venn leaves without pursuing the account. Mara and Joss return to work, both aware of an uneasy conversation, and neither has established what happened out of sight." },
+  quiet: { title: "No one asks",
+    text: "Venn finishes her paperwork and departs. Mara keeps what she saw to herself. There has been no shared account and no inspection that settles her concern." },
+};
+
+export const scene = { id: "short-count", title: "Short Count", characters, props, backstory, opening, beats, derive, verdict, directorOnlyEventIds, caseNotes, witnessEndings,
   setting: "Pell's Landing, a small river ferry office at dawn. There is a locked cash box, a key on a hook by the door, and one window facing the yard." };
 export default scene;

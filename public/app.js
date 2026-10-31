@@ -49,12 +49,14 @@ function render() {
   m.textContent = g.live ? `Nemotron live: ${g.model.split("/")[1]}` : "No API key: scripted lines";
   m.className = "pill" + (g.live ? " live" : "");
   $("#events").innerHTML = g.events.map((e) => `<li><span class="at">${esc(e.at)}</span>${esc(e.text)}</li>`).join("");
+  $("#rewind").hidden = path.length === 0;
   const beat = $("#beat");
   if (g.beat) {
     beat.innerHTML = `<h2>${esc(g.beat.prompt)}</h2><div class="opts">${g.beat.options.map((o) => `<button class="opt" data-id="${o.id}"><b>${esc(o.label)}</b><span>${esc(o.hint)}</span></button>`).join("")}</div>`;
-    beat.querySelectorAll(".opt").forEach((b) => (b.onclick = () => { path.push(b.dataset.id); load(); }));
+    beat.querySelectorAll(".opt").forEach((b) => (b.onclick = () => { path.push(b.dataset.id); clearReply(); load(); }));
   } else if (g.ending) {
-    beat.innerHTML = `<div class="ending"><h2>${esc(g.ending.title)}</h2><p>${esc(g.ending.text)}</p><p class="hint">Compare the columns: every one of them acted on a different morning. Ask any of them what they think now.</p></div>`;
+    const closer = g.lens === "director" ? "Compare the columns to inspect each mind. Ask any of them what they think now." : "Revisit your last decision to compare the consequences of another question.";
+    beat.innerHTML = `<div class="ending"><h2>${esc(g.ending.title)}</h2><p>${esc(g.ending.text)}</p><p class="hint">${esc(closer)}</p></div>`;
   }
   const cols = g.characters;
   renderPerspective(cols);
@@ -115,9 +117,21 @@ async function ask() {
     if (token === askEpoch) { btn.disabled = false; btn.textContent = "Ask"; }
   }
 }
+function clearReply() {
+  ++askEpoch;
+  $("#reply").innerHTML = "";
+  $("#ask").disabled = false;
+  $("#ask").textContent = "Ask";
+}
 $("#askForm").onsubmit = (e) => { e.preventDefault(); ask(); };
+$("#rewind").onclick = () => {
+  if (!path.length) return;
+  path.pop();
+  clearReply();
+  load();
+};
 $("#lens").onclick = () => { lens = lens === "story" ? "director" : "story";
-  ++askEpoch; $("#reply").innerHTML = ""; $("#ask").disabled = false; $("#ask").textContent = "Ask"; load(); };
+  clearReply(); load(); };
 $("#restart").onclick = () => { path = []; lens = "story"; who = "mara";
-  ++askEpoch; $("#reply").innerHTML = ""; $("#q").value = ""; load(); };
+  clearReply(); $("#q").value = ""; load(); };
 load();

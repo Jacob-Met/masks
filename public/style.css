@@ -120,3 +120,8 @@ details pre{white-space:pre-wrap;background:var(--panel);padding:10px;border-rad
   .voice-tabs .mask svg{width:25px;height:25px}
   .voice-tabs .mask .nm{font-size:11px}
 }
+
+/* A player can examine the alternative to a choice without restarting the case. */
+#rewind{color:#e8cca0;border-color:#776343}
+#rewind:hover{color:#fff2d6;border-color:#cfac69}
+@media(max-width:600px){.tools .lens-switch{grid-column:1/-1}}

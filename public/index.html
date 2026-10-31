@@ -11,6 +11,7 @@
   <h1>Masks <span class="sub">Short Count</span></h1>
   <div class="tools">
     <span id="model" class="pill" title="Dialogue model"></span>
+    <button id="lens" class="quiet lens-switch" type="button" aria-pressed="false">Reveal all minds · spoilers</button>
     <button id="restart" class="quiet" type="button">Start over</button>
   </div>
 </header>
@@ -20,10 +21,13 @@
     <div id="beat" class="beat" aria-live="polite"></div>
   </section>
   <section class="minds" aria-label="What each character knows">
-    <div class="legend" aria-hidden="true">
+    <section id="notebook" class="notebook" aria-label="Case notebook" aria-live="polite"></section>
+    <div id="legend" class="legend" aria-hidden="true">
       <span><i class="k saw"></i>saw / did</span><span><i class="k told"></i>told</span><span><i class="k ded"></i>worked out</span><span><i class="k wrong"></i>wrong</span>
     </div>
-    <div class="matrix" id="matrix" role="table" aria-label="Belief matrix"></div>
+    <div id="matrixViewport" class="matrix-viewport"><div class="matrix" id="matrix" role="table" aria-label="Belief matrix"></div></div>
+    <p id="matrixHint" class="matrix-hint">Swipe horizontally to follow each person's account.</p>
+    <div id="voiceTabs" class="voice-tabs" role="group" aria-label="Choose a witness to question"></div>
     <div class="voice" id="voice">
       <form id="askForm">
         <label for="q" id="askLabel">Ask</label>

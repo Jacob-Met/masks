@@ -1,6 +1,6 @@
 const $ = (s) => document.querySelector(s);
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-let path = [], g = null, who = "mara";
+let path = [], g = null, who = "mara", lens = "story", askEpoch = 0, loadEpoch = 0;
 const presets = ["What happened here this morning?", "What do you make of Joss?", "Did anyone touch the cash box?", "What will you do next?"];
 const MASK = {
   mara: '<svg viewBox="0 0 48 48"><path d="M6 14c6-6 30-6 36 0 1 14-6 28-18 28S5 28 6 14z" fill="none" stroke="currentColor" stroke-width="2"/><ellipse cx="17" cy="21" rx="4.5" ry="2.5" fill="currentColor"/><ellipse cx="31" cy="21" rx="4.5" ry="2.5" fill="currentColor"/><path d="M19 34c3 2 7 2 10 0" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
@@ -10,9 +10,40 @@ const MASK = {
 const LABEL = { knows: "Knows", "certain-wrong": "Certain", believes: "Believes", unsure: "Unsure", doubts: "Doubts", rejects: "Rules out", unaware: "No idea" };
 
 async function load() {
-  g = await (await fetch(`/api/game?path=${path.join(",")}`)).json();
+  const requestId = ++loadEpoch;
+  const params = new URLSearchParams({ path: path.join(","), view: lens });
+  const next = await (await fetch("/api/game?" + params.toString())).json();
+  if (requestId !== loadEpoch) return;
+  g = next;
   render();
 }
+function renderPerspective(cols) {
+  const director = g.lens === "director";
+  $("#lens").textContent = director ? "Return to witness view" : "Reveal all minds · spoilers";
+  $("#lens").setAttribute("aria-pressed", String(director));
+  $("#legend").hidden = !director;
+  $("#matrix").hidden = !director;
+  $("#matrixViewport").hidden = !director;
+  $("#matrixHint").hidden = !director;
+  $("#notebook").hidden = director;
+  $("#voiceTabs").innerHTML = cols.map((c) =>
+    '<button type="button" class="mask" data-who="' + esc(c.id) +
+    '" aria-pressed="' + String(c.id === who) + '" style="--cc:' + esc(c.color) + '">' +
+    MASK[c.id] + '<span class="nm">' + esc(c.name) + '</span>' +
+    '<span class="rl">' + esc(c.role) + '</span></button>').join("");
+  if (director) return;
+  const cards = g.notes.map((n) =>
+    '<article class="note-card"><div class="note-meta"><span class="note-kind">' +
+    esc(n.kind) + '</span><span>' + esc(n.source) + '</span></div>' +
+    '<p>' + esc(n.text) + '</p></article>').join("");
+  $("#notebook").innerHTML =
+    '<div class="notebook-head"><span class="folio-mark">CASE FILE / 01</span>' +
+    '<h2>What can be established?</h2><p>Witnessed details, claims and inspected facts ' +
+    'are not interchangeable. The unopened count and other people\'s private thoughts stay concealed.</p></div>' +
+    '<div class="note-stack">' + (cards || '<p class="hint">Nothing observed yet.</p>') +
+    '</div><p class="veil-cue">Every account is partial. Question a witness or make the next choice.</p>';
+}
+
 function render() {
   const m = $("#model");
   m.textContent = g.live ? `Nemotron live: ${g.model.split("/")[1]}` : "No API key: scripted lines";
@@ -26,6 +57,7 @@ function render() {
     beat.innerHTML = `<div class="ending"><h2>${esc(g.ending.title)}</h2><p>${esc(g.ending.text)}</p><p class="hint">Compare the columns: every one of them acted on a different morning. Ask any of them what they think now.</p></div>`;
   }
   const cols = g.characters;
+  renderPerspective(cols);
   let h = `<div class="mh" role="columnheader"></div><div class="mh truth" role="columnheader" style="align-self:end">Truth</div>`;
   for (const c of cols) h += `<div class="mh" role="columnheader"><button class="mask" data-who="${c.id}" aria-pressed="${c.id === who}" style="--cc:${c.color}">${MASK[c.id]}<span class="nm">${esc(c.name)}</span><span class="rl">${esc(c.role)}</span></button></div>`;
   for (const r of g.matrix) {
@@ -39,7 +71,7 @@ function render() {
     }
   }
   $("#matrix").innerHTML = h;
-  document.querySelectorAll(".mask").forEach((b) => (b.onclick = () => { who = b.dataset.who; $("#reply").innerHTML = ""; render(); }));
+  document.querySelectorAll(".mask").forEach((b) => (b.onclick = () => { who = b.dataset.who; ++askEpoch; $("#reply").innerHTML = ""; render(); }));
   const c = cols.find((k) => k.id === who);
   $("#voice").style.setProperty("--cc", c.color);
   $("#askLabel").textContent = `Ask ${c.name.split(" ")[0] === "Inspector" ? "Venn" : c.name.split(" ")[0]}`;
@@ -47,21 +79,45 @@ function render() {
   $("#chips").querySelectorAll("button").forEach((b) => (b.onclick = () => { $("#q").value = b.textContent; ask(); }));
 }
 async function ask() {
+  const token = ++askEpoch;
+  const askedWho = who, askedLens = lens;
   const q = $("#q").value.trim() || presets[0];
-  const btn = $("#ask"); btn.disabled = true; btn.textContent = "Asking...";
-  $("#reply").innerHTML = `<p class="hint">Nemotron is answering from ${esc(who)}'s own mind...</p>`;
-  const c = g.characters.find((k) => k.id === who);
+  const btn = $("#ask");
+  btn.disabled = true;
+  btn.textContent = "Asking...";
+  $("#reply").innerHTML = '<p class="hint">Listening to the witness...</p>';
+  const c = g.characters.find((k) => k.id === askedWho);
   try {
-    const r = await (await fetch("/api/say", { method: "POST", body: JSON.stringify({ path: path.join(","), who, question: q }) })).json();
-    const rejected = r.attempts.filter((a) => a.violations && a.violations.length);
+    const response = await fetch("/api/say", { method: "POST",
+      body: JSON.stringify({ path: path.join(","), who: askedWho, question: q, view: askedLens }) });
+    const r = await response.json();
+    if (token !== askEpoch || askedLens !== lens || askedWho !== who) return;
+    if (!response.ok) throw new Error(r.error || "The witness could not answer.");
+    const attempts = Array.isArray(r.attempts) ? r.attempts : [];
+    const rejected = attempts.filter((a) => a.violations && a.violations.length);
     const badge = r.source === "nemotron"
-      ? `<span class="badge ok">Check passed: nothing ${esc(c.name.split(" ")[0])} cannot know</span><span class="badge">${esc(r.model.split("/")[1])} via Nebius, attempt ${r.attempts.length}</span>`
-      : `<span class="badge no">Scripted line</span><span class="badge">${esc(r.reason)}</span>`;
-    const rej = rejected.map((a) => `<div class="rej">Rejected: "${esc(a.line)}"<br>${a.violations.map((v) => esc(v.why)).join(" ")}</div>`).join("");
-    $("#reply").innerHTML = `<p class="say" style="--cc:${c.color}">${esc(r.line)}</p>${badge}${rej}<details><summary>What the model was shown</summary><pre>${esc(r.prompt)}</pre></details>`;
-  } catch (e) { $("#reply").innerHTML = `<p class="hint">Request failed: ${esc(e.message)}</p>`; }
-  btn.disabled = false; btn.textContent = "Ask";
+      ? '<span class="badge ok">Knowledge guard passed</span><span class="badge">' +
+        esc(r.model || "Nemotron") + '</span>'
+      : '<span class="badge no">Scripted line</span><span class="badge">' + esc(r.reason || "") + '</span>';
+    const diagnostics = askedLens === "director"
+      ? rejected.map((a) => '<div class="rej">Rejected: "' + esc(a.line) + '"<br>' +
+          a.violations.map((v) => esc(v.why)).join(" ") + '</div>').join("") +
+        (r.prompt ? '<details><summary>What the model was shown</summary><pre>' +
+          esc(r.prompt) + '</pre></details>' : "")
+      : '<p class="review-note">The private model prompt and rejected drafts are hidden in witness view. ' +
+        (r.blockedCount ? String(r.blockedCount) + ' rejected draft(s).' : 'Open the director\'s lens to inspect the mechanism.') +
+        '</p>';
+    $("#reply").innerHTML = '<p class="say" style="--cc:' + esc(c.color) + '">' +
+      esc(r.line) + '</p>' + badge + diagnostics;
+  } catch (e) {
+    if (token === askEpoch) $("#reply").innerHTML = '<p class="hint">Request failed: ' + esc(e.message) + '</p>';
+  } finally {
+    if (token === askEpoch) { btn.disabled = false; btn.textContent = "Ask"; }
+  }
 }
 $("#askForm").onsubmit = (e) => { e.preventDefault(); ask(); };
-$("#restart").onclick = () => { path = []; $("#reply").innerHTML = ""; $("#q").value = ""; load(); };
+$("#lens").onclick = () => { lens = lens === "story" ? "director" : "story";
+  ++askEpoch; $("#reply").innerHTML = ""; $("#ask").disabled = false; $("#ask").textContent = "Ask"; load(); };
+$("#restart").onclick = () => { path = []; lens = "story"; who = "mara";
+  ++askEpoch; $("#reply").innerHTML = ""; $("#q").value = ""; load(); };
 load();

@@ -25,10 +25,12 @@ instead of pretending that suspicion and verification are the same thing.
 The full underlying world-truth matrix and Joss's unobserved opening actions
 are deliberately withheld during play. You can still question any character.
 
+The case ending is also narrated from what witnesses could establish, not from hidden backstory. The director retains the complete original epilogue.
+
 **Reveal all minds · spoilers** switches explicitly to the original director's
 belief matrix, all opening events, and inspectable model prompts and rejected
 attempts. You can return to witness view. Changing lenses clears the displayed
-reply so a previously exposed prompt does not remain on screen. **Start over**
+reply so a previously exposed prompt does not remain on screen. **Revisit decision** steps back to the previous choice without losing the earlier choices; **Start over**
 returns to the default unspoiled case.
 
 The playable HTTP game response omits omniscient matrix data and private opening
